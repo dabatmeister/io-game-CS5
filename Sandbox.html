@@ -1,0 +1,172 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Sandbox</title>
+	</head>
+
+	<body onload ="startGame()">
+		<!-- Most the code in this body block is based off of the W3 HTML game tutorial-->
+		<script type="text/javascript">
+			var player;
+			// obs stands for "obstacles"
+      var obs = new Array(4);
+			var food = new Array(10);
+
+
+
+      // This function runs when the page loads (see the onload attribute of body tag)
+			function startGame() {
+    			myGameArea.start();
+          // Lava pits- do damage to every player
+  			  obs[0] = new component("red", 300, 120, 25, "lava");
+   			  obs[1] = new component("red", 650, 320, 15, "lava");
+          // Lakes- do damage to large players
+          obs[2] = new component("blue", 500, 600, 70, "lake");
+          obs[3] = new component("blue", 100, 100, 75, "lake");
+          // Initialize objects in food array
+          for(i = 0; i < food.length; i++){
+            food[i] = new component("yellow", Math.random()*myGameArea.canvas.width, Math.random()*myGameArea.canvas.height, 5)
+          }
+          // Initialize the player sprite
+    			player = new component("green", 50, 200, 30);
+    	}
+
+
+
+      // This is the constructor for "components," which include the player sprite, obstacles, and food.
+			function component(paramColor, paramX, paramY, paramRadius, paramType){
+				  this.type = paramType;
+          // The visible property is only relevant for food. The player sprite and obstacles are allways visible.
+          this.visible = true;
+  				this.x = paramX;
+	  			this.y = paramY;
+		  		this.color = paramColor;
+			  	this.radius = paramRadius;
+          // The update function is called during every time the game updates (right now this happens every 20 milliseconds)
+				  this.update = function(){
+  				    if(this.visible){
+	  					    ctx = myGameArea.context;
+    	      			ctx.fillStyle = this.color;
+		    	  			// This code draws the sprites- right now they are all just circles.
+                  // Code inspired by https://www.w3resource.com/javascript-exercises/javascript-drawing-exercise-2.php
+                  ctx.beginPath();
+     		       		ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+  			 	       	ctx.fill();
+  					      ctx.lineWidth = 5;
+       				    ctx.strokeStyle = this.color;
+   	    			    ctx.stroke();
+   			      };
+				  } 
+			}
+
+
+      // Stuff for the canvas which displays the game.
+			var myGameArea = {
+   				canvas : document.createElement("canvas"),
+     			start : function() {
+          		this.canvas.width = 1500;
+         			this.canvas.height = 750;
+              // I don't exactly understand how these next two lines work. All I know is that they are important. The W3 HTML tutorial discussed them.
+          		this.context = this.canvas.getContext("2d");
+        			document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+              // This line determines how often the game updates itself. The 20 signifies 20 milliseconds.
+              // The game updates itself by calling the updateGameArea method, whose name is listed as the first param in this line of code.
+        			this.interval = setInterval(updateGameArea, 20);
+              // This keeps track of the x and y coordinates of the mouse.
+        			window.addEventListener('mousemove', function (e) {myGameArea.x = e.pageX; myGameArea.y = e.pageY;});
+          },
+          // Erase the previous "frame" of the game so that the new (updated) frame can then be drawn.
+         	clear : function() {
+      		    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    	 	  },
+          // This is called when the came is lost. clearInterval makes the game stop updating.
+    	   	stop : function() {
+       			window.alert("you lost! :(");
+       			clearInterval(this.interval);
+  			  }
+      }
+
+
+      // This function is called by the setInterval method to update the game.
+      function updateGameArea() {
+          //If the player gets small enough they "die," stopping the game. Presumably this code will have to be changed once multiplayer functionality is implemented?
+          // The code "if(player.radius <= 0)" won't work because of rounding error- sometimes the player has a radius of 0.00000002, for instance.
+    			if(player.radius <= 0.02){
+      				myGameArea.stop();
+    			}
+          // "else" means "if the player has not died," in other words, "if the game can continue."
+    			else{
+              // Delete the old frame of the game.
+      				myGameArea.clear();
+              // Update all of the obstacles.
+		     			for(i = 0; i < obs.length; i++){
+    	     				obs[i].update();
+    			   	};
+              // Update all of the food.
+    				  for(i = 0; i < food.length; i++){
+    					    food[i].update();
+    				  };
+              // I'm not sure why this "if" statement is relevant, but the W3 tutorial included it and the game acts wierd if it is removed.
+              // Maybe it tests if the mouse cursor is actually in the canvas?
+    				  if (myGameArea.x && myGameArea.y) {
+       				   	// Speed in X-direction is computed by the fraction with (X-distance between mouse cursor and player sprite) in the numerator,
+                  // and (player-size * some constant).
+                  // Thus, the player sprite will move faster if the mouse is farther away from it and slower if it is larger.
+                  speedX = (myGameArea.x - player.x)/(player.radius/2);
+                  // Same theory for speed in Y-direction.
+         					speedY = (myGameArea.y - player.y)/(player.radius/2);
+                  
+                  // If the player wants to move rightwards && the right extreme of their sprite is touching/beyond the right of the canvas, stop the // rightward movement so they don't go off the canvas.
+         					if((speedX > 0) && ((player.x + player.radius) >= myGameArea.canvas.width)){
+                      speedX = 0;
+                  };
+                  // If the player wants to move leftwards && the left extreme of their sprite is touching/beyond the left of the vancas, stop the
+                  // leftward movement so they don't go off the canvas.
+                  if((speedX < 0) && ((player.x - player.radius) <= 0)){
+                      speedX = 0;
+                  };
+                  // If the player wants to move upwards && the top of their sprite is touching/beyond the top of the canvas, stop the upward movement so they don't go off the canvas.
+                  if((speedY > 0) && ((player.y + player.radius) >= myGameArea.canvas.height)){
+                      speedY = 0;
+                  };
+                  // If the player wants to move downwards && the bottom of their sprite is touching/beyond the bottom of the canvas, stop the downward movement so they don't go off the screen.
+                  if((speedY < 0) && ((player.y - player.radius) <= 0)){
+                      speedY = 0;
+                  };
+                  player.x = player.x + speedX;
+	        				player.y = player.y + speedY; 
+              };
+              // For each obstacle...
+    	     		for(i = 0; i < obs.length; i++){
+       		   	     // ...compute the distance between the obstacle and player sprite using the pythagorean theorem...
+                  obstacleDistance = Math.pow(Math.pow(player.x-obs[i].x, 2) + Math.pow(player.y-obs[i].y, 2), 0.5);
+       			   	  // ...if the player's sprite overlaps with the obstacle...
+                  if(obstacleDistance < (player.radius + obs[i].radius)){
+       				 		    //...unless the player is touching a lake and they are small...
+                      if(obs[i].type == "lake" && player.radius < 30){/* Do nothing */}
+                      // ...shrink the player sprite size.
+                      else{
+                          player.radius-= 0.3;
+                      };
+       				    };
+       				};
+              // For each piece of food...
+       				for(i = 0; i < food.length; i++){
+                   // ...compute the distance between the obstacle and player sprite using the pythagorean theorem...
+         			 		fDistance = Math.pow(Math.pow(player.x-food[i].x, 2) + Math.pow(player.y-food[i].y, 2), 0.5);
+         			 		// ... if the player's sprite overlaps with the food and the food is visible (not eaten)...
+                  if((fDistance < (player.radius + food[i].radius)) && food[i].visible == true){
+           				 		// grow the sprite and make the food dissapear
+                      player.radius += 5;
+       	    			 		food[i].visible = false;
+       			  	 	};
+              };
+       		};
+   				player.update();
+			};
+
+		</script>
+
+	</body>
+
+</html>
