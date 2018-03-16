@@ -1,0 +1,125 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Sandbox</title>
+<!-- Most the code in this body block is based off of the W3 HTML game tutorial-->
+    <script type="text/javascript">
+ 
+      var players = new Array(1);
+      
+      // This variable keeps track of how many intervals have passed. Every time it reaches 50 (every second) it resets to zero.
+      // It is used to make food appear at a different rate than the game updates.
+      var intervalCounter = 0;
+
+      // This function runs when the page loads (see the onload attribute of body tag)
+      function startGame(){
+          myGameArea.start();
+          for(i = 0; i < players.length; i++){
+              players[i] = new player("green", 50, 200, i);
+          }
+      }
+
+
+      // constructor for the parent class
+      function component(paramColor, paramX, paramY, paramRadius){
+          this.x = paramX; 
+          this.y = paramY;
+          this.color = paramColor;
+          this.radius = paramRadius;
+      }
+      
+
+      //The update function is called during every time the game updates (right now this happens every 20 milliseconds)
+      component.prototype.update = function(){
+          ctx = myGameArea.context;
+          ctx.fillStyle = this.color;
+          // This code draws the sprites- right now they are all just circles.
+          // Code inspired by https://www.w3resource.com/javascript-exercises/javascript-drawing-exercise-2.php
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+          ctx.fill();
+          ctx.lineWidth = 5;
+          ctx.strokeStyle = this.color;
+          ctx.stroke();
+      }
+
+      // Constructor for player
+      function player(paramColor, paramX, paramY, paramPlayerIndex){
+          component.call(this, paramColor, paramX, paramY, 30);
+          this.playerIndex = paramPlayerIndex;
+      }
+
+      // Just prototype stuff for javascript
+      player.prototype = Object.create(component.prototype);
+      player.prototype.constructor = player;
+
+
+      // Stuff for the canvas which displays the game.
+      var myGameArea = {
+          canvas : document.createElement("canvas"),
+          start : function() {
+              this.canvas.width = 1500;
+              this.canvas.height = 750;
+              // I don't exactly understand how these next two lines work. All I know is that they are important. The W3 HTML tutorial discussed them.
+              this.context = this.canvas.getContext("2d");
+              document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+              // This line determines how often the game updates itself. The 20 signifies 20 milliseconds.
+              // The game updates itself by calling the updateGameArea method, whose name is listed as the first param in this line of code.
+              this.interval = setInterval(updateGameArea, 20);
+              // This keeps track of the x and y coordinates of the mouse.
+              window.addEventListener('mousemove', function (e) {myGameArea.x = e.pageX; myGameArea.y = e.pageY;});
+          },
+          // Erase the previous "frame" of the game so that the new (updated) frame can then be drawn.
+          clear : function() {
+              this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          },
+          // This is called when the came is lost. The clearInterval lines make the game stop updating.
+     }
+
+
+      // This function is called by the setInterval method to update the game.
+      function updateGameArea() {
+          myGameArea.clear();
+          // I'm not sure why this "if" statement is relevant, but the W3 tutorial included it and the game acts wierd if it is removed.
+          // Maybe it tests if the mouse cursor is actually in the canvas?
+          if (myGameArea.x && myGameArea.y) {
+              // Speed in X-direction is computed by the fraction with (X-distance between mouse cursor and player sprite) in the numerator,
+              // and (player-size * some constant).
+              // Thus, the player sprite will move faster if the mouse is farther away from it and slower if it is larger.
+              playerSpeedX = (myGameArea.x - players[0].x)/(players[0].radius/2);
+              // Same theory for speed in Y-direction.
+              playerSpeedY = (myGameArea.y - players[0].y)/(players[0].radius/2);
+              // If the player wants to move rightwards && the right extreme of their sprite is touching/beyond the right of the canvas, stop the rightward movement so they don't go off the canvas.
+              if((playerSpeedX > 0) && ((players[0].x + players[0].radius) >= myGameArea.canvas.width)){
+                  playerSpeedX = 0;
+              };
+              // If the player wants to move leftwards && the left extreme of their sprite is touching/beyond the left of the vancas, stop the
+              // leftward movement so they don't go off the canvas.
+              if((playerSpeedX < 0) && ((players[0].x - players[0].radius) <= 0)){
+                  playerSpeedX = 0;
+              };
+              // If the player wants to move upwards && the top of their sprite is touching/beyond the top of the canvas, stop the upward movement so they don't go off the canvas.
+              if((playerSpeedY > 0) && ((players[0].y + players[0].radius) >= myGameArea.canvas.height)){
+                  playerSpeedY = 0;
+              };
+              // If the player wants to move downwards && the bottom of their sprite is touching/beyond the bottom of the canvas, stop the downward movement so they don't go off the screen.
+              if((playerSpeedY < 0) && ((players[0].y - players[0].radius) <= 0)){
+                  playerSpeedY = 0;
+              };
+              players[0].x = players[0].x + playerSpeedX;
+              players[0].y = players[0].y + playerSpeedY; 
+          }
+          intervalCounter++;
+          // calling the update method redraws the sprite in its new position
+          players[0].update();
+      };
+
+    </script>
+
+	</head>
+
+	<body onload ="startGame()">
+		
+	</body>
+
+</html>
