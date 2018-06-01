@@ -35,7 +35,7 @@ var monsterAndPlayerDamage = 200;
 var obstacleDamage = 180;
 
 // length of the array determines how many obstacles there will be on the map
-var obstacles = new Array(8);
+var obstacles = new Array(16);
 
 // length of the array determines how many monsters there will be on the map
 var monsters = new Array(2);
@@ -56,7 +56,7 @@ var maxAndStartingMonsterRadius = 55;
 var startingPlayerRadius = 30;
 
 // cap on the number of food pieces that can exist at once
-var maxAmountOfFood = 5;
+var maxAmountOfFood = 20;
 
 // This variable keeps track of how many intervals have passed. Every time it reaches 40 (every second) it resets to zero. It is used to make food appear at a different rate than the game updates.
 var intervalCounter = 0;
